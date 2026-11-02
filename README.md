@@ -92,18 +92,23 @@ npx http-server -p 8000
 
 ---
 
-## ⚙️ Cloud Configuration
+## ⚙️ Cloud Configuration & Google Sheets
 
-The application is pre-configured to sync with Google Sheets via a Google Apps Script endpoint embedded in `index.html`:
+The application syncs attendance and roster data with Google Sheets:
+- **Connected Google Spreadsheet:** [View Spreadsheet](https://docs.google.com/spreadsheets/d/1o9Efz9w0-nt6JZABujOIgtmLQgWHxkj4reOVkGpWtqs/edit?usp=sharing)
+- **Spreadsheet ID:** `1o9Efz9w0-nt6JZABujOIgtmLQgWHxkj4reOVkGpWtqs`
+- **Backend Script:** `google-apps-script.js` (included in this repository)
 
-```html
-<script type="application/json" id="config">
-{
-  "sheetUrl": "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL",
-  "token": "YOUR_ACCESS_TOKEN"
-}
-</script>
-```
+### How to Deploy the Google Apps Script Backend:
+1. Open the Google Spreadsheet in your browser.
+2. Click **Extensions > Apps Script** in the top menu.
+3. Paste the contents of `google-apps-script.js` into the code editor and save.
+4. Click **Deploy > New deployment**.
+5. Select **Web app** as the deployment type:
+   - **Execute as:** `Me`
+   - **Who has access:** `Anyone`
+6. Click **Deploy** and copy your **Web app URL** (`https://script.google.com/macros/s/.../exec`).
+7. Paste this URL into `index.html` (`sheetUrl`) and `admin.html` (`apiUrl`).
 
 ---
 
