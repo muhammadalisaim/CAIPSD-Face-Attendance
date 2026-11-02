@@ -1,15 +1,22 @@
 /**
- * CAIPSD Face Attendance - Google Apps Script Backend
+ * CAIPSD Face Attendance - Google Sheets Sync Backend
  * Linked to Google Spreadsheet:
  * https://docs.google.com/spreadsheets/d/1o9Efz9w0-nt6JZABujOIgtmLQgWHxkj4reOVkGpWtqs/edit
  */
 
 const SPREADSHEET_ID = "1o9Efz9w0-nt6JZABujOIgtmLQgWHxkj4reOVkGpWtqs";
-const DEFAULT_TOKEN = "YbkeTXd27kUurquK_bEcztDRMerQqCi3";
 const DEFAULT_ADMIN_PASSCODE = "2375";
 
+function getSpreadsheet() {
+  try {
+    return SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById(SPREADSHEET_ID);
+  } catch (e) {
+    return SpreadsheetApp.openById(SPREADSHEET_ID);
+  }
+}
+
 function getAttendanceSheet() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = getSpreadsheet();
   let sheet = ss.getSheetByName("Attendance");
   if (!sheet) {
     sheet = ss.insertSheet("Attendance");
@@ -22,10 +29,19 @@ function getAttendanceSheet() {
       "Status",
       "Sync Time"
     ]);
-    sheet.getRange(1, 1, 1, 7).setFontWeight("bold").setBackground("#eaf2fb");
+    sheet.getRange(1, 1, 1, 7)
+      .setFontWeight("bold")
+      .setBackground("#0B1F4B")
+      .setFontColor("#FFFFFF");
     sheet.setFrozenRows(1);
   }
   return sheet;
+}
+
+// RUN THIS FUNCTION ONCE IN APPS SCRIPT EDITOR TO GRANT PERMISSIONS
+function testSetup() {
+  const sheet = getAttendanceSheet();
+  Logger.log("Successfully connected to sheet: " + sheet.getName());
 }
 
 function doGet(e) {
@@ -35,8 +51,12 @@ function doGet(e) {
 
 function doPost(e) {
   try {
-    const raw = e.postData.contents;
-    const data = JSON.parse(raw);
+    if (!e || !e.postData || !e.postData.contents) {
+      return ContentService.createTextOutput(JSON.stringify({ result: "error", message: "No data received" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const data = JSON.parse(e.postData.contents);
 
     // 1. Admin Actions (login, data, logout, changePasscode)
     if (data.action) {
@@ -47,12 +67,12 @@ function doPost(e) {
     if (data.name) {
       const sheet = getAttendanceSheet();
       const ts = data.ts || new Date().getTime();
-      const date = data.date || new Date().toLocaleDateString();
-      const time = data.time || new Date().toLocaleTimeString();
+      const date = data.date || Utilities.formatDate(new Date(), "GMT+5", "yyyy-MM-dd");
+      const time = data.time || Utilities.formatDate(new Date(), "GMT+5", "hh:mm:ss a");
       const name = data.name || "";
       const section = data.section || "";
       const status = data.status || "Present";
-      const syncTime = new Date().toLocaleString();
+      const syncTime = Utilities.formatDate(new Date(), "GMT+5", "yyyy-MM-dd hh:mm:ss a");
 
       sheet.appendRow([ts, date, time, name, section, status, syncTime]);
 
